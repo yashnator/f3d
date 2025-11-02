@@ -882,8 +882,7 @@ public:
       interactor.addBinding({ mod_t::CTRL, "O" }, "open_file_dialog", "Others", std::bind(docString, "Open File Dialog"));
 #endif
 #if F3D_MODULE_CLIP
-      interactor.addBinding({ mod_t::NONE, "Period" }, "take_screenshot_to_clipboard", "Others", std::bind(docString, "Take a screenshot to clipboard"));
-      // interactor.addBinding({ mod_t::SHIFT, "F12" }, "take_screenshot_to_clipboard", "Others", std::bind(docString, "Take a screenshot to clipboard"));
+      interactor.addBinding({ mod_t::SHIFT, "F12" }, "take_screenshot_to_clipboard", "Others", std::bind(docString, "Take a screenshot to clipboard"));
 #endif
       interactor.addBinding({ mod_t::CTRL, "F12" }, "take_minimal_screenshot", "Others", std::bind(docString, "Take a minimal screenshot"));
 
