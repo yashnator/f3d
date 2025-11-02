@@ -50,6 +50,13 @@ public:
    */
   void SaveScreenshot(const std::string& filenameTemplate, bool minimal = false);
 
+#if F3D_MODULE_CLIP
+  /**
+   * Trigger a render and copy the screenshot to clipboard.
+   */
+  void ScreenshotToClipboard();
+#endif
+
   F3DStarter();
   ~F3DStarter();
 

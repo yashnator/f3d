@@ -3,3 +3,4 @@
 - imgui: v1.92.2
 - nlohmann_json: v3.12.0
 - tinyfiledialogs: v3.19.1
+- clip v1.12

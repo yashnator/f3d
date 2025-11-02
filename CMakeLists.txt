@@ -101,12 +101,29 @@ option(F3D_MODULE_WEBP "WebP images module" OFF)
 option(F3D_MODULE_UI "ImGui widgets module" ON)
 option(F3D_MODULE_DMON "dmon (watch) module" ON)
 option(F3D_MODULE_TINYFILEDIALOGS "tinyfiledialogs module" ON)
+option(F3D_MODULE_CLIP "clip clipboard module" ON)
+
+foreach(module
+    F3D_MODULE_RAYTRACING
+    F3D_MODULE_EXR
+    F3D_MODULE_WEBP
+    F3D_MODULE_UI
+    F3D_MODULE_DMON
+    F3D_MODULE_TINYFILEDIALOGS
+    F3D_MODULE_CLIP)
+  if(${module})
+    add_compile_definitions(${module}=1)
+  else()
+    add_compile_definitions(${module}=0)
+  endif()
+endforeach()
 
 # Use externals
 option(F3D_USE_EXTERNAL_CXXOPTS "Use external cxxopts dependency" OFF)
 option(F3D_USE_EXTERNAL_NLOHMANN_JSON "Use external nlohmann_json dependency" OFF)
 cmake_dependent_option(F3D_USE_EXTERNAL_DMON "Use external dmon dependency" OFF "F3D_MODULE_DMON" OFF)
 cmake_dependent_option(F3D_USE_EXTERNAL_IMGUI "Use external imgui dependency" OFF "F3D_MODULE_UI" OFF)
+cmake_dependent_option(F3D_USE_EXTERNAL_CLIP "Use external clip dependency" OFF "F3D_MODULE_CLIP" OFF)
 
 if (F3D_USE_EXTERNAL_CXXOPTS)
   find_package(cxxopts REQUIRED)
@@ -119,6 +136,9 @@ if (F3D_USE_EXTERNAL_DMON)
 endif ()
 if (F3D_USE_EXTERNAL_IMGUI)
   find_package(imgui REQUIRED)
+endif ()
+if (F3D_USE_EXTERNALCLIP)
+  find_package(clip REQUIRED)
 endif ()
 
 # Shared options between application and library
@@ -322,6 +342,7 @@ f3d_report_variable(F3D_MODULE_EXR)
 f3d_report_variable(F3D_MODULE_RAYTRACING)
 f3d_report_variable(F3D_MODULE_UI)
 f3d_report_variable(F3D_MODULE_WEBP)
+f3d_report_variable(F3D_MODULE_CLIP)
 f3d_report_variable(F3D_PLUGIN_BUILD_ALEMBIC)
 f3d_report_variable(F3D_PLUGIN_BUILD_ASSIMP)
 f3d_report_variable(F3D_PLUGIN_BUILD_DRACO)
