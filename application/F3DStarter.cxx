@@ -29,6 +29,10 @@
 #endif
 #endif
 
+#if F3D_MODULE_CLIP
+#include "clip.h"
+#endif
+
 #if F3D_MODULE_TINYFILEDIALOGS
 #include "tinyfiledialogs.h"
 #endif
@@ -45,6 +49,7 @@
 #include <cassert>
 #include <cmath>
 #include <csignal>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -53,6 +58,7 @@
 #include <numeric>
 #include <regex>
 #include <set>
+#include <vector>
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -966,7 +972,9 @@ public:
       interactor.addBinding({ mod_t::CTRL, "O" }, "open_file_dialog", "Others", std::bind(docString, "Open File Dialog"));
 #endif
       interactor.addBinding({ mod_t::CTRL, "F12" }, "take_minimal_screenshot", "Others", std::bind(docString, "Take a minimal screenshot"));
-
+#if F3D_MODULE_CLIP
+      interactor.addBinding({ mod_t::SHIFT, "F12" }, "take_screenshot_to_clipboard", "Others", std::bind(docString, "Take a screenshot to clipboard"));
+#endif
       // This replace an existing default binding command in the libf3d
       interactor.removeBinding({ mod_t::NONE, "Drop" });
       interactor.addBinding({ mod_t::NONE, "Drop" }, "add_files_or_set_hdri", "Others", std::bind(docString, "Load dropped files, folder or HDRI"));
@@ -1962,6 +1970,52 @@ void F3DStarter::SaveScreenshot(const std::string& filenameTemplate, bool minima
 }
 
 //----------------------------------------------------------------------------
+#if F3D_MODULE_CLIP
+void F3DStarter::ScreenshotToClipboard()
+{
+  f3d::image img = this->Internals->Engine->getWindow().renderToImage();
+  unsigned int channelCount = img.getChannelCount();
+  unsigned int channelTypeSize = img.getChannelTypeSize();
+  unsigned int imgWidth = img.getWidth();
+  unsigned int imgHeight = img.getHeight();
+
+  // Flip the image as img.getContent() gives upside down image
+  const size_t rowBytes = static_cast<size_t>(imgWidth) * channelCount * channelTypeSize;
+  auto* pixelData = static_cast<uint8_t*>(img.getContent());
+  std::vector<uint8_t> rowBuffer(rowBytes);
+  for (unsigned int row = 0; row < imgHeight / 2; ++row)
+  {
+    uint8_t* top = pixelData + static_cast<size_t>(row) * rowBytes;
+    uint8_t* bottom = pixelData + static_cast<size_t>(imgHeight - 1 - row) * rowBytes;
+    std::copy_n(top, rowBytes, rowBuffer.begin());
+    std::copy_n(bottom, rowBytes, top);
+    std::copy_n(rowBuffer.begin(), rowBytes, bottom);
+  }
+  const void* buffer = pixelData;
+
+  clip::image_spec spec;
+  spec.width = imgWidth;
+  spec.height = imgHeight;
+  spec.bits_per_pixel = 8u * channelCount * channelTypeSize;
+  spec.bytes_per_row = imgWidth * channelCount * channelTypeSize;
+  spec.red_mask   = 0x000000FF;
+  spec.green_mask = 0x0000FF00;
+  spec.blue_mask  = 0x00FF0000;
+  spec.alpha_mask = channelCount == 4 ? 0xFF000000 : 0x00000000;
+
+  clip::image clipImg(buffer, spec);
+  if(clip::set_image(clipImg))
+  {
+    f3d::log::info("Copied screenshot to the clipboard");
+  }
+  else
+  {
+    f3d::log::error("Error: couldn't copy screenshot to the clipboard");
+  }
+}
+#endif
+
+//----------------------------------------------------------------------------
 int F3DStarter::AddFile(const fs::path& path, bool quiet)
 {
   try
@@ -2390,7 +2444,17 @@ void F3DStarter::AddCommands()
     f3d::interactor::command_documentation_t{ "take_minimal_screenshot [filename]",
       "take a minimal screenshot into provided file or --screenshot-filename" },
     complFilesystem);
-
+#if F3D_MODULE_CLIP
+  interactor.addCommand(
+    "take_screenshot_to_clipboard",
+    [this](const std::vector<std::string>& args)
+    {
+      this->ScreenshotToClipboard();
+    },
+    f3d::interactor::command_documentation_t{ "take_screenshot_to_clipboard",
+    "take a screenshot to the clipboard" },
+  complFilesystem);
+#endif
   // This replace an existing command in libf3d
   interactor.removeCommand("add_files");
   interactor.addCommand(

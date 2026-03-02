@@ -53,6 +53,9 @@ function(f3d_create_exec target_name)
   endif ()
 
   target_include_directories(${target_name} PUBLIC $<BUILD_INTERFACE:${F3D_SOURCE_DIR}/external/tinyfiledialogs>)
+  if (F3D_MODULE_CLIP AND NOT F3D_USE_EXTERNAL_CLIP)
+    target_include_directories(${target_name} PUBLIC $<BUILD_INTERFACE:${F3D_SOURCE_DIR}/external/clip>)
+  endif ()
 
   set(f3d_compile_options_private "")
   set(f3d_compile_options_public "")
@@ -95,6 +98,16 @@ function(f3d_create_exec target_name)
   # tinyfiledialogs
   if (F3D_MODULE_TINYFILEDIALOGS)
     target_compile_definitions(${target_name} PRIVATE F3D_MODULE_TINYFILEDIALOGS)
+  endif ()
+
+  # clip
+  if (F3D_MODULE_CLIP)
+    target_compile_definitions(${target_name} PRIVATE F3D_MODULE_CLIP)
+    if (F3D_USE_EXTERNAL_CLIP)
+      target_link_libraries(${target_name} PRIVATE clip::clip)
+    else ()
+      target_link_libraries(${target_name} PRIVATE clip)
+    endif ()
   endif ()
 
   if(VTK_VERSION VERSION_LESS 9.3.20240914)
